@@ -181,7 +181,6 @@ for k = 2:samples
   x_hat_minus(:,k) =  phi * x_hat_p1us( :,k);
   P_minus  =  phi * P_p1us  * phi'  + Q;
   P_minus  =  ( P_minus  + P_minus') /  2;
-  x(:,k)=x_hat_minus(:,k);
 
   time(k)  =  k * delta_t;   %   Memorize  time index
   

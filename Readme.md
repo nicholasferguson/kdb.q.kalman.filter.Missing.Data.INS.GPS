@@ -1,4 +1,7 @@
 # an.intergrated.INS.GPS.kalman.m
+
+    + This was transcribed from: [MS]An integrated INS GPS navigation system for small - kalman(1998)
+	
 	For octave Octave-5.1.0.0 x64, I had to update these files, from a development branch at octave.org
 	+ annotation.m 
 	+ axis.m 

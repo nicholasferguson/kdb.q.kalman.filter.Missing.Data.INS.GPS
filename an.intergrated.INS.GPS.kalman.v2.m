@@ -32,6 +32,13 @@ w7 = zeros(1,samples);        % No white  noise input  for x7
 w8 = zeros(1,samples);        % No white  noise input  for x8
 w = [wl;w2;w3;w4;w5;w6;w7;w8];
 
+% Measurement Noise  Vector
+vl = randn(1,samples);
+v2 = randn(1,samples) ;
+v3 = randn(1,samples) ;
+v4 = randn(1,samples) ;
+v_0 = [vl;v2];         % Noise vector without  GPS input
+v_l = [vl;v2;v3;v4] ;  % Noise vector with  GPS input
 
 % Generate GPS Sampling
 gps_flag = zeros(samples,1);
@@ -48,7 +55,7 @@ end
 
 
 % State Transition  Matrix
-phi = [exp(-delta_t/tau_1) 	0 0 0 0 0 0 0;
+F = [exp(-delta_t/tau_1) 	0 0 0 0 0 0 0;
        0  exp(-delta_t/tau_1) 0 0 0 0 0 0;
        0 0  exp(-delta_t/tau_2) 0 0 0 0 0;
        0 0 0  exp(-delta_t/tau_2) 0 0 0 0;
@@ -71,22 +78,15 @@ process_noise  = sqrt(Q)*w;
 
 % Error Covariance  Matrix
 R_0 = diag([.5  .5]);      % Without  GPS signal
-R_l = diag([.5  .5 0 0]);    % With  GPS signal
-
-  
+R_l = diag([.5  .5 0 0]);    % With  GPS signal   
 
 % Generate Measurement  Noise Vectors
 sensor_noise_0  = sqrt(R_0) * v_0;   % Without GPS signal
 sensor_noise_1  = sqrt(R_l) * v_l;   % With GPS signal
 
-% Initial x_hat_minus
-x_hat_minus (8,samples) = zeros;
+% Initial xV
+xV (8,samples) = zeros;
 
-% Initial x_hat_plus
-x_hat_plus (8,samples) = zeros;
-
-% Initial State  Vector
-x(8,samples)  = zeros;
 
 % Initial z as globals for graphing
 z_gps = zeros(1,samples); 
@@ -96,7 +96,7 @@ z_gps3 = zeros(1,samples);
 z_gps4 = zeros(1,samples); 
 z_gps_time = zeros(1,samples); 
 % Initial Error  Covariance Matrix
-P_minus =  [0.5 0 0 0 0 0 0 0;
+P =  [0.5 0 0 0 0 0 0 0;
              0 0.5 0 0 0 0 0 0;
              0 0 1 0 0 0 0 0;
              0 0 0 1 0 0 0 0;
@@ -111,104 +111,97 @@ time_index_b =1;    % Initial Index  forMeasurement  Vector with GPS
 'Beginning Kalman  Loops'
 
 % Begin Simulation
-for k = 2:samples
+for i = 2:samples
 
   % Generate State Vectors  and Measurement  Vectors
-  x(:,k) = phi * x(:,k-1)  + process_noise( :,k-1);
-
-  % Kalman loop with  out GPS signal
-  if gps_flag(k)  ==  0
+  xV(:,i) = F * xV(:,i-1)  + process_noise( :,i-1);
+ % Kalman loop with  out GPS signal
+  if gps_flag(i)  ==  0
+  
         H =  [1 0 0 0 0 0 0 0;
              0 1 0 0 0 0 0 0];
 
         R = diag([.5  .5]);
 
-        sensor_noise_0( :,k) = sqrt(R) * v_0(:,k);
+        sensor_noise_0( :,i) = sqrt(R) * v_0(:,i);
 
-        z_vell(time_index_a) = H(1,:) * x(:,k)  + sensor_noise_0(1,k)
-        z_vel2(time_index_a) = H(2,:) * x(:,k)  + sensor_noise_0(2,k)
+        z_vell(time_index_a) = H(1,:) * xV(:,i)  + sensor_noise_0(1,i)
+        z_vel2(time_index_a) = H(2,:) * xV(:,i)  + sensor_noise_0(2,i)
 
-        z_vel_time(time_index_a)  = k * delta_t;
+        z_vel_time(time_index_a)  = i * delta_t;
 
         z_vel =  [z_vell ; z_vel2];
 
         % Compute Ka1man  Gain
-        K = P_minus * H' * inv(H * P_minus * H' + R);
+        K = P * H' * inv(H * P * H' + R);
 
       %  Update Estimate
-      x_hat_p1us(:,k) = x_hat_minus(:,k-1)+K*(z_vel(:,time_index_a) - H *x_hat_minus(:,k-1));
+      xV(:,i) = xV(:,i-1)+K*(z_vel(:,time_index_a) - H *xV(:,i-1));
 
       %  Compute Error  Covariance for Updated  Estimate
-      P_p1us = (eye(8)- K * H )*P_minus;
-      P_p1us = (P_p1us+ P_p1us')/2;
+      P1 = (eye(8)- K * H )*P;
+      P1 = (P1+ P1')/2;
 
       time_index_a = time_index_a +1; % Increase the  measurement vector  index by  1
 
    else
-
-      H=   [1 0 0 0 0 0 0 0;
+       H=   [1 0 0 0 0 0 0 0;
             0 1 0 0 0 0 0 0;
             0 0 0 0 1 0 1 0;
             0 0 0 0 0 1 0 1];
 
       R =  diag([.5 .5  0 0]);                           
 
-      z_gps1(time_index_b) = H(1,:)* x(:,k)+ sensor_noise_1(1,k);
-      z_gps2(time_index_b) = H(2,:)* x(:,k)+ sensor_noise_1(2,k);
-      z_gps3(time_index_b) = H(3,:)* x(:,k)+ sensor_noise_1(3,k);
-      z_gps4(time_index_b) = H(4,:)* x(:,k)+ sensor_noise_1(4,k);
+      z_gps1(time_index_b) = H(1,:)* xV(:,i)+ sensor_noise_1(1,i);
+      z_gps2(time_index_b) = H(2,:)* xV(:,i)+ sensor_noise_1(2,i);
+      z_gps3(time_index_b) = H(3,:)* xV(:,i)+ sensor_noise_1(3,i);
+      z_gps4(time_index_b) = H(4,:)* xV(:,i)+ sensor_noise_1(4,i);
       z_gps  = [z_gps1  ; z_gps2 ; z_gps3  ; z_gps4];
-      z_gps_time(time_index_b) = k * delta_t;
+      z_gps_time(time_index_b) = i * delta_t;
 
       % Compute  Ka1man Gain
-      K =  P_minus * H'  * inv(H * P_minus  * H' + R);
+      K =  P * H'  * inv(H * P  * H' + R);
 
       % Update  Estimate
-      x_hat_p1us(:,k) = x_hat_minus(:,k-1)+ K *(z_gps(:,time_index_b) - H *x_hat_minus (:,k-1));
+      xV(:,i) = xV(:,i-1)+ K *(z_gps(:,time_index_b) - H *xV (:,i-1));
 
       % Compute  Error Covariance  for Updated Estimate
-      P_p1us  = ( eye(8)  -  K  * H ) *  P_minus;
-      P_p1us  = ( P_p1us  + P_p1us') / 2;
+      P1  = ( eye(8)  -  K  * H ) *  P;
+      P1  = ( P1  + P1') / 2;
 
       time_index_b  = time_index_b  +1; % Increase the measurement vector  index by 1
+ end % if
+      % Project   Ahead
 
-   end   % end of if
-
-  pmin( :,:,k)  = P_p1us;  % Save  Matrix for  future ana1ysis
-
-  % Project   Ahead
-
-  x_hat_minus(:,k) =  phi * x_hat_p1us( :,k);
-  P_minus  =  phi * P_p1us  * phi'  + Q;
-  P_minus  =  ( P_minus  + P_minus') /  2;
-
-  time(k)  =  k * delta_t;   %   Memorize  time index
-  
+  P  =  F * P1  * F'  + Q;
+  P  =  ( P  + P') /  2;
+  time(i)  =  i * delta_t;   %   Memorize  time index
   
 
-end % end of for
+
+end %for
 
 figure(1)
 subplot(3,1,1)
-plot(time, x(7,:),'b-',time, x_hat_minus(7,:),'r-.',z_gps_time,z_gps3, 'g^')
+plot(time, xV(7,:),'b-',time, xV(7,:),'r-.',z_gps_time,z_gps3, 'g^')
 xlabel('time  (seconds )')
 ylabel('position  (meters)')
 title('North  Position  vs Time')
-axis([0  max(time)  -1.5*max(abs(z_gps3)) 1.5*max(abs(z_gps3))])
+axis([0  max(time)  -1.5*max(abs(z_gps3))+-delta_t/10 1.5*max(abs(z_gps3))+delta_t/10])
 
 subplot(3,1,2)
-plot(time,  x(8,:),'b-',time,  x_hat_minus(8,:), 'r-.',z_gps_time,z_gps4,  'g^')
+plot(time,  xV(8,:),'b-',time,  xV(8,:), 'r-.',z_gps_time,z_gps4,  'g^')
 xlabel('time   (seconds)')
 ylabel('position  (meters)')
 title('East Position  vs  Time')
 axis([0  max(time)  -1.5*max(abs(z_gps4) ) 1.5*max(abs(z_gps4))])
 
 subplot(3,1,3)
-plot(x_hat_minus(7,:), x_hat_minus(8,:), 'b-')
+plot(xV(7,:), xV(8,:), 'b-')
 xlabel('North  Position')
 ylabel('East Position')
 title('North-East  Position  plot')
-axis([-1.5*max(abs(x_hat_minus(7,:)))  1.5*max(abs(x_hat_minus(7,:)))...
-      -1.5*max(abs(x_hat_minus(8,:)))  1.5*max(abs(x_hat_minus(8,:)))])
+axis([-1.5*max(abs(xV(7,:)))  1.5*max(abs(xV(7,:)))...
+      -1.5*max(abs(xV(8,:)))  1.5*max(abs(xV(8,:)))])
 
 orient tall

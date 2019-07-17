@@ -1,0 +1,50 @@
+Note:  F.M  is matrix multiplication of F times Matrix
+	   F.FT is F times transpose of F
+	   
+This is an analysis of an.intergrated.INS.GPS.kalman.v2.m 
+
+==================================== Analysis of code that handles time events with GPS signal and w/o GPS Signal========================			
+
+													F<- init as State Transition Matrix	size:8x8						
+													Q<----input data   an.intergrated.INS.GPS.kalman.v2.m size:8x8  Constant in loop	
+													P <--- Initial Error  Covariance Matrix size:8x8
+													w<-process noise vector    size:8x 'number of samples '  (constant)        
+													process_noise<-sqrt(Q)*w;
+													v<-Measurement noise vector  (constant)
+						____________________________________________ |_____________________________________
+						|                                                                                  |
+R_1<- measurement error cov with GPS signal.(Constant)				              R_0<- error cov w/o GPS signal. (Constant)  
+sensor_noise_1<-sqrt(R_1).v  With GPS signa (Constant)                            sensor_noise_0<-sqrt(R_0).v  Without GPS signal (Constant)
+                        |                                                                                  |
+----------------------------------------------------------------Start of LOOP-------------------------------------------------------------
+														              |
+														   Start of 'Is there GPS Signal?'
+        _____________Yes GPS Signal_________                       ___|___            __________No GPS Signal_____
+        |                                  |                                         |                            |
+-- measurement equations--       -- system equations --                   -- measurement equations--      -- system equations --
+        |              			           |                                         |                            |
+  xV<-F.xV+process_noise	   	           |                                 xV<-F.xV+process_noise	              |
+        |	                           H<-Init 8x8                                   |                        H<-Init 2x8
+        |		 	         		   R<-Init size:4                                |                        R<-Init size:2
+        |                                  |                                         |                            |
+  z_gps<- with xV,sensor_noise_1           |	                              z_vel<-with sensor_noise_0,xV,H     |
+							           K<-P.HT.inv(H.P.HT+R)                                                 K<-P.HT.inv(H.P.HT+R)
+		|                                  |                                                                      |
+		|						       (Compute Error Covariance for Updated Estimate)            (Compute Error Covariance for Updated Estimate)
+        |                              P1<-(((I - K.H).P)+((I - K.H).P)T)/2	                             P1<-(((I - K.H).P)+((I - K.H).P)T)/2
+       _|_______________/__________________|_                                         |__________/________________|_
+        |               \                  |                                          |          \                |
+		|                                                                             |
+     xV<-xV+K.(z_gps-H.xV)	                                                   xV<-xV+K.(z_vel-H.xV)
+
+_________________________________________________________End of 'Is there GPS Signal?'_______________________________________________
+                                                                        |
+																		|
+																		|
+                                                             P<-((F.P1.FT+ Q)+(F.P1.FT+ Q)T
+															 
+----------------------------------------------------------------End of LOOP-------------------------------------------------------------
+																		|
+																		|
+														functions for generating graphs 
+  

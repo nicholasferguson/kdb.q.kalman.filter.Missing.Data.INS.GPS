@@ -76,6 +76,15 @@ Q =  [((1/(2*tau_1) )*(1-exp((-2*delta_t)/tau_1))) 0 0 0 0 0 0 0;
 % Generate Process  Noise Vectors
 process_noise  = sqrt(Q)*w;
 
+% Initial x_hat_minus
+xV(8,samples) = zeros;
+
+% Initial x_hat_plus
+xV1(8,samples) = zeros;
+
+% Initial State  Vector
+x(8,samples)  = zeros;
+
 % Error Covariance  Matrix
 R_0 = diag([.5  .5]);      % Without  GPS signal
 R_l = diag([.5  .5 0 0]);    % With  GPS signal   
@@ -83,10 +92,6 @@ R_l = diag([.5  .5 0 0]);    % With  GPS signal
 % Generate Measurement  Noise Vectors
 sensor_noise_0  = sqrt(R_0) * v_0;   % Without GPS signal
 sensor_noise_1  = sqrt(R_l) * v_l;   % With GPS signal
-
-% Initial xV
-xV (8,samples) = zeros;
-x(8,samples)  = zeros;
 
 % Initial z as globals for graphing
 z_gps = zeros(1,samples); 
@@ -113,7 +118,8 @@ time_index_b =1;    % Initial Index  forMeasurement  Vector with GPS
 % Begin Simulation
 for i = 2:samples
 
- x(:,k) = F * x(:,k-1)  + process_noise( :,k-1);
+  % Generate State Vectors  and Measurement  Vectors
+  x(:,i) = F * x(:,i-1)  + process_noise( :,i-1);
  % Kalman loop with  out GPS signal
   if gps_flag(i)  ==  0
   
@@ -135,7 +141,7 @@ for i = 2:samples
         K = P * H' * inv(H * P * H' + R);
 
       %  Update Estimate
-      xV(:,i) = xV(:,i-1)+K*(z_vel(:,time_index_a) - H *xV(:,i-1));
+      xV1(:,i) = xV(:,i-1)+K*(z_vel(:,time_index_a) - H *xV(:,i-1));
 
       %  Compute Error  Covariance for Updated  Estimate
       P1 = (eye(8)- K * H )*P;
@@ -151,10 +157,10 @@ for i = 2:samples
 
       R =  diag([.5 .5  0 0]);                           
 
-      z_gps1(time_index_b) = H(1,:)* xV(:,i)+ sensor_noise_1(1,i);
-      z_gps2(time_index_b) = H(2,:)* xV(:,i)+ sensor_noise_1(2,i);
-      z_gps3(time_index_b) = H(3,:)* xV(:,i)+ sensor_noise_1(3,i);
-      z_gps4(time_index_b) = H(4,:)* xV(:,i)+ sensor_noise_1(4,i);
+      z_gps1(time_index_b) = H(1,:)* x(:,i)+ sensor_noise_1(1,i);
+      z_gps2(time_index_b) = H(2,:)* x(:,i)+ sensor_noise_1(2,i);
+      z_gps3(time_index_b) = H(3,:)* x(:,i)+ sensor_noise_1(3,i);
+      z_gps4(time_index_b) = H(4,:)* x(:,i)+ sensor_noise_1(4,i);
       z_gps  = [z_gps1  ; z_gps2 ; z_gps3  ; z_gps4];
       z_gps_time(time_index_b) = i * delta_t;
 
@@ -162,7 +168,7 @@ for i = 2:samples
       K =  P * H'  * inv(H * P  * H' + R);
 
       % Update  Estimate
-      xV(:,i) = xV(:,i-1)+ K *(z_gps(:,time_index_b) - H *xV (:,i-1));
+      xV1(:,i) = xV(:,i-1)+ K *(z_gps(:,time_index_b) - H *xV (:,i-1));
 
       % Compute  Error Covariance  for Updated Estimate
       P1  = ( eye(8)  -  K  * H ) *  P;
@@ -171,10 +177,10 @@ for i = 2:samples
       time_index_b  = time_index_b  +1; % Increase the measurement vector  index by 1
  end % if
       % Project   Ahead
-  % Generate State Vectors  and Measurement  Vectors
-  xV(:,i) = F * xV(:,i)  + process_noise( :,i-1);
+  xV(:,i) =  F * xV1( :,i);
   P  =  F * P1  * F'  + Q;
   P  =  ( P  + P') /  2;
+  x(:,i)=xV(:,i);
   time(i)  =  i * delta_t;   %   Memorize  time index
   
 

@@ -86,7 +86,7 @@ sensor_noise_1  = sqrt(R_l) * v_l;   % With GPS signal
 
 % Initial xV
 xV (8,samples) = zeros;
-
+x(8,samples)  = zeros;
 
 % Initial z as globals for graphing
 z_gps = zeros(1,samples); 
@@ -113,8 +113,7 @@ time_index_b =1;    % Initial Index  forMeasurement  Vector with GPS
 % Begin Simulation
 for i = 2:samples
 
-  % Generate State Vectors  and Measurement  Vectors
-  xV(:,i) = F * xV(:,i-1)  + process_noise( :,i-1);
+ x(:,k) = F * x(:,k-1)  + process_noise( :,k-1);
  % Kalman loop with  out GPS signal
   if gps_flag(i)  ==  0
   
@@ -125,8 +124,8 @@ for i = 2:samples
 
         sensor_noise_0( :,i) = sqrt(R) * v_0(:,i);
 
-        z_vell(time_index_a) = H(1,:) * xV(:,i)  + sensor_noise_0(1,i)
-        z_vel2(time_index_a) = H(2,:) * xV(:,i)  + sensor_noise_0(2,i)
+        z_vell(time_index_a) = H(1,:) * x(:,i)  + sensor_noise_0(1,i)
+        z_vel2(time_index_a) = H(2,:) * x(:,i)  + sensor_noise_0(2,i)
 
         z_vel_time(time_index_a)  = i * delta_t;
 
@@ -172,7 +171,8 @@ for i = 2:samples
       time_index_b  = time_index_b  +1; % Increase the measurement vector  index by 1
  end % if
       % Project   Ahead
-
+  % Generate State Vectors  and Measurement  Vectors
+  xV(:,i) = F * xV(:,i)  + process_noise( :,i-1);
   P  =  F * P1  * F'  + Q;
   P  =  ( P  + P') /  2;
   time(i)  =  i * delta_t;   %   Memorize  time index

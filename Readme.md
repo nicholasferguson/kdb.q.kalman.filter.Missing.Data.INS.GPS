@@ -6,7 +6,7 @@
 	plot would find them.  Octave required that change.
 
 	
-	For octave Octave-5.1.0.0 x64, I had to update these files, from a development branch at octave.org
+	For octave Octave-5.1.0.0 x64, I had to update these files, from a development branch at octave.org  Not sure this does it.
 	+ annotation.m 
 	+ axis.m 
 	+ gtext.m 
@@ -18,7 +18,14 @@
 	
 	
 	To run: 
-	Using Octave Octave-5.1.0.0 x64 on  Windows 10.
+	Used Octave Octave-5.1.0.0 x64 on  Windows 10.
 	
-	line 10:  minutes = 1; % original was 6
-	line 16: 1/delta_t * 2 * minutes % original was 1/delta * 60
+	In this directory
+	+ [MS]An integrated INS GPS navigation system for small - kalman(1998).pdf
+			by Glenn C. Hernandez
+	+ an.intergrated.INS.GPS.kalman.m  ( original transciption of code from thesis)
+	+ an.intergrated.INS.GPS.kalman.v2.m  cleaned up code. normalized names and
+			removed unused code
+	+ code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
+			This analyzes code in a flow chart type methodoogy
+	

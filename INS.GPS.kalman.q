@@ -41,7 +41,6 @@ tau_3:3600;   / seconds for ocean  current
 n:8;
 
 / Process Noise  Vector
-
 wA:nor s;
 w2:nor s;
 w3:nor s;
@@ -79,6 +78,9 @@ F[6;0]:tau_1*(1-exp[-1*delta_t%tau_1]);
 F[6;2]:tau_2*(1-exp[-1*delta_t%tau_2]);
 F[7;1]:tau_1*(1-exp[-1*delta_t%tau_1]);
 F[7;3]:tau_2*(1-exp[-1*delta_t%tau_2]);
+
+/ Q is the mean of Process Noise  Vector 'w'
+/ Q = E[w wT]
 Q:zeroM2[8;8];
 Q[0;0]:(1%(2*tau_1))*(1-exp[-2*delta_t]%tau_1);
 Q[1;1]:(1%(2*tau_1))*(1-exp[-2*delta_t]%tau_1);
@@ -112,34 +114,42 @@ z_gps3:zeroM2[1;s];
 z_gps4:zeroM2[1;s];
 z_gps_time:zeroM2[1;s];
 
-/ Initial Error  Covariance Matrix
+/ System Error Covariance
+/ P is initial Error Covariance Matrix
 P:make_diag[8];
 P[0;0]:0.5;P[1;1]:0.5;P[4;4]:3.0;P[5;5]:3.0;
 P[6;6]:5.0;P[7;7]:5.0;		
+P1:zeroM2[8;8];
+/ Index for Measurement Vector
 tia:0;tia:`long$tia; /Initial Index for Measurement Vector without  GPS
 tib:0;tib:`long$tib; /Initial Index for Measurement Vector with  GPS
+
+/ Vector with measurements
 z_vel:zeroM2[2;s];
 z_vel1:s#0f;
 z_vel2:s#0f;
+/ Vector with measurements
 z_gps:zeroM2[4;s];
 z_gps1:zeroM2[1;s]
 z_gps2:zeroM2[1;s]
 z_gps3:zeroM2[1;s]
 z_gps4:zeroM2[1;s]
-P1:zeroM2[8;8];
-H0:2 8#0.0;
+/ noiseless connection between measurement and state vector
+H0:2 8#0.0;   / without GPS
 H0[0;0]:1.0;H0[1;1]:1.0;
-R_0:2 2#0.0;R_0[0;0]:0.5;R_0[1;1]:0.5;
-H1:4 8#0f;
+H1:4 8#0f;    / with GPS
 H1[0;0]:1f;H1[1;1]:1f;H1[2;4]:1f;H1[2;6]:1f;H1[3;5]:1f;H1[3;7]:1f;
-R_1:4 4#0.0;R_1[0;0]:0.5;R_1[1;1]:0.5;R_1[2;2]:0.0;R_1[3;3]:0.0;
+/ Measurement error covariance.
+R_0:2 2#0.0;R_0[0;0]:0.5;R_0[1;1]:0.5; / Without GPS
+R_1:4 4#0.0;R_1[0;0]:0.5;R_1[1;1]:0.5;R_1[2;2]:0.0;R_1[3;3]:0.0; / with GPS
+
 myfunction:{[it]
 
 			x[;it]::process_noise[;it-1]+ mmu[F;x[;it-1]];
 			j:first nor 1;
 			$[j < 0.5;gps_flag::0f;gps_flag::1f];
 			/ show "gps_flag";show gps_flag;
-			if[gps_flag=0f;
+			if[gps_flag=0f; / loop w/o GPS Signal
 			     [
 					sensor_noise_0[;it]: mmu[xexp[R_0;0.5];v_0[;it]];
 					z_vel1[tia]::mmu[H0[0;];x[;it]]+sensor_noise_0[0;it];
@@ -154,7 +164,7 @@ myfunction:{[it]
 					P1::mmu[P1;flip P1]%2;
 					tia+:1;
 				 ]];			
-			if[gps_flag=1f;
+			if[gps_flag=1f; / Loop with GPS Signal
 				 [
 					z_gps1:mmu[H1[0;];x[;it]]+sensor_noise_1[0;it];
 					z_gps2:mmu[H1[1;];x[;it]]+sensor_noise_1[1;it];

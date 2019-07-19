@@ -177,7 +177,7 @@ myfunction:{[it]
                    / Compute  Ka1man Gain
 					 K:mmu[mmu[P;flip H1];inv[mmu[H1;mmu[P;flip H1]]+R_1]];
 				/ Update  Estimate
-					 xV1[;it]::xV[;it-1]+ mmu[K;(z_gps[;tia]-mmu[H1;xV[;it-1]])];
+					 xV1[;it]::xV[;it-1]+ mmu[K;(z_gps[;tib]-mmu[H1;xV[;it-1]])];
 				/ Compute  Error Covariance  for Updated Estimate
 					 P1::mmu[(EY- mmu[K;H1]);P];
 					 P1::mmu[P1;flip P1]%2;					

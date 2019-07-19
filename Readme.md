@@ -1,7 +1,7 @@
 # INS.GPS.kalman.q
     + Q version of an.intergrated.INS.GPS.kalman.v2.m
     + This was transcribed from: [MS]An integrated INS GPS navigation system for small - kalman(1998)
-	+ code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
+	+ See code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
 
 # an.intergrated.INS.GPS.kalman.m
 

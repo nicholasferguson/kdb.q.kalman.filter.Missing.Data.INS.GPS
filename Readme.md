@@ -4,7 +4,7 @@
 
 # an.intergrated.INS.GPS.kalman.m
 
-    + This matlab code was transcribed from its support documentaton: 
+    + This matlab code was transcribed from its support documentation: 
 	
 	Hernandez, Glenn, "An integrated INS GPS navigation system for small AUVs
 	using an asynchronous Kalman Filter", Master's Thesis, Naval
@@ -38,5 +38,5 @@
 			
 #  code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
 
-	+ This analyzes code for Kalman Filter in a flow chart type methodoogy
+	+ This analyzes code for Kalman Filter in a flow chart type methodology
 	

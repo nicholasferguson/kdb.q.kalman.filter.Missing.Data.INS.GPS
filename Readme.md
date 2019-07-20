@@ -1,6 +1,6 @@
 # INS.GPS.kalman.q
-    + Q version of an.intergrated.INS.GPS.kalman.v2.m
-	+ See code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
+    + Q version of matlab code in file: an.intergrated.INS.GPS.kalman.v2.m
+	+ See documentation in code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
 
 # an.intergrated.INS.GPS.kalman.m
 

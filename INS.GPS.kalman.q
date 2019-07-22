@@ -2,7 +2,7 @@
 / Read [MS]An integrated INS GPS navigation system for small - kalman(1998)
 / And octave file: an.intergrated.INS.GPS.kalman.v2
 / code.analysis.an.intergrated.INS.GPS.kalman.v2.docx
-/ 
+ 
 
 /------ helper functions
 make_diagA:{[x]`float$x*{x=/:x}til count x};
